@@ -1,2 +1,2 @@
 # bimm143
-UCSD Intro to Bioinformatics
+UC San Diego Intro to Bioinformatics
