@@ -1,0 +1,37 @@
+---
+title: "Class11HW"
+author: "Laura Biggs"
+date: '2022-11-01'
+output: pdf_document
+---
+
+Read in expression genotype results
+```{r}
+genotype_data <- read.table("rs8067378_ENSG00000172057.6.txt")
+View(genotype_data)
+```
+
+Q13: Sample size/median for each genotype
+AG median: 25.065
+AA median: 31.25
+GG median: 20.074
+```{r}
+table(genotype_data$geno)
+
+AG <- genotype_data[grepl("A/G", genotype_data$geno), ]
+summary(AG)        
+
+AA <- (genotype_data[grepl("A/A", genotype_data$geno), ])
+summary(AA)
+
+GG <- (genotype_data[grepl("G/G", genotype_data$geno), ])
+summary(GG)
+```
+
+
+Q14: Boxplot
+The SNP is G|G which reduces ORMDL3 expression relative to the A|A genotype. A|A is expressed in approximately 30% of the sample while G|G is expressed in 20% of the samples.
+```{r}
+boxplot(genotype_data$exp ~ genotype_data$geno)
+```
+
