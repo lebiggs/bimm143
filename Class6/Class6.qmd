@@ -1,0 +1,199 @@
+---
+title: "Class6"
+author: "Laura Biggs"
+format: pdf
+---
+
+## Quarto
+
+# Q1
+```{r}
+# Q1: Write a function grade() to determine an overall grade from a vector of student homework assignment scores dropping the lowest single score. If a student misses a homework (i.e. has an NA value) this can be used as a score to be potentially dropped. Your final function should be adquately explained with code comments and be able to work on an example class gradebook such as this one in CSV format: “https://tinyurl.com/gradeinput” [3pts]
+
+#Practice student inputs
+student1 <- c(100, 100, 100, 100, 100, 100, 100, 90) 
+student2 <- c(100, NA, 90, 90, 90, 90, 97, 80) 
+student3 <- c(90, NA, NA, NA, NA, NA, NA, NA)
+
+mean(student1)
+
+#Both return NA b/c of NA in list, need to somehow exclude
+mean(student2)
+mean(student3)
+```
+
+How to exclude the lowest value?
+```{r}
+#Tells us what position in a list has the lowest value
+#which.min()
+
+which.min(student1)
+
+#If we want to remove the lowest value use the minus sign to extract it from the individual list
+#Removes the lowest score, 90, from student 1
+student1[-which.min(student1)]
+
+#Can we find the mean from this which.min() operation?
+mean(student1[-which.min(student1)])
+```
+
+Test cope snippet on other student examples
+```{r}
+#Student 2
+#Doesnt work b/c of NA in the list, try excluding with na.rm=TRUE
+mean(student2[-which.min(student2)])
+mean(student2, na.rm=TRUE)
+
+#Student 3
+#na.rm distorts the grade and is inadequate in calculating the total grade
+mean(student3[-which.min(student3)])
+mean(student3, na.rm=TRUE)
+```
+
+Identify and replace all NA's with a value of 0
+```{r}
+#Find all NA values w/the element is.na; returns FALSE if not and TRUE if NA
+is.na(student2)
+is.na(student3)
+
+#OR identify NA position w/which() function
+which(is.na(student2))
+which(is.na(student3))
+
+#Replace NA with zero
+student2[is.na(student2)] <- 0
+mean(student2)
+
+#Produces the expected low grade from the missing assignments
+student3[is.na(student3)] <- 0
+mean(student3)
+```
+
+We must drop the lowest score
+```{r}
+#Use the previous code that excluded the lowest score using the which.min() operator
+student2[is.na(student2)] <- 0
+student2
+mean(student2[-which.min(student2)])
+
+#Test on student 3; it WORKS!
+student3[is.na(student3)] <- 0
+student3
+mean(student3[-which.min(student3)])
+
+```
+
+## Function time!
+
+```{r}
+#Create grade function w/mean variable, and return of mean variable. 
+#na.rm = TRUE excludes NA values from function calculations
+#Use which.min function to exclude the lowest value
+  grade <- function(x) {
+    x[is.na(x)] <- 0
+    mean(x[-which.min(x)])
+  }
+
+```
+
+Test function with student example input 
+```{r}
+grade(student1)
+grade(student2)
+grade(student3)
+```
+
+Code documentation
+```{r}
+#' Calculation of average score from vector of student homework grades,
+#' dropping the lowest score. Missing values are treated a 0.
+#' 
+#' @param x A numeric vector of homework scores
+#'
+#' @return An average score
+#' @export 
+#'
+#' @examples
+#' student <- c(100, NA, 90, 97)
+#' grade(student)
+#' 
+
+  grade <- function(x) {
+    # Treat input NA values as zero
+    x[is.na(x)] <- 0
+    # Excluding the lowest score with -which.min()
+    mean(x[-which.min(x)])
+  }
+```
+
+Use the function on the whole class data
+```{r}
+#Create variable and load in gradeinput file
+#Covert students from X column to rows
+url <- 'https://tinyurl.com/gradeinput'
+gradebook <- read.csv(url, row.names = 1)
+gradebook
+
+#Test function with apply() 
+#Inputs to apply is the dataframe/x values, the row or column choice, and the name of the function we just created
+apply(gradebook, 1, grade)
+```
+
+# Q2
+```{r}
+# Q2: Using your grade() function and the supplied gradebook, Who is the top scoring student overall in the gradebook? [3pts]
+
+#Find the answer with code using which.max()
+which.max(apply(gradebook, 1, grade))
+```
+
+# Q3
+```{r}
+# Q3: From your analysis of the gradebook, which homework was toughest on students (i.e. obtained the lowest scores overall?)[2pts]
+
+#Mean calculation
+avg_hw <- apply(gradebook, 2, mean, na.rm=TRUE)
+avg_hw
+which.min(avg_hw)
+```
+
+
+```{r}
+#Median calculation
+# Use apply() to calculate the grade function on each column which represents the individual homeworks
+# Row = 1 and column = 2
+# na.rm=TRUE again to exclude the NA values
+med_hw <- apply(gradebook, 2, median, na.rm=TRUE)
+med_hw
+which.min(med_hw)
+```
+
+Is mean or median more representative of the lowest scoring homework? Median
+```{r}
+boxplot(gradebook)
+```
+
+Q4. Optional Extension: From your analysis of the gradebook, which homework was most predictive of overall score (i.e. highest correlation with average grade score)? [1pt] 
+
+Are the final results of the students correlated with a particular homework?
+```{r}
+final_results <- apply(gradebook, 1, grade)
+cor(final_results, gradebook$hw5)
+
+#Correlation cannot work with NA values; mask values with is.na
+masked_gradebook <- gradebook
+masked_gradebook[is.na(masked_gradebook)] <- 0
+masked_gradebook
+```
+Correlation w/o NA values
+```{r}
+cor(final_results, masked_gradebook$hw5)
+```
+
+Apply correlation across the entire masked gradebook
+```{r}
+apply(masked_gradebook, 2, cor, x=final_results)
+```
+
+
+Q5. Make sure you save your Quarto document and can click the “Render” (or Rmarkdown”Knit”) button to generate a PDF foramt report without errors. Finally, submit your PDF to gradescope. [1pt]
