@@ -1,0 +1,366 @@
+---
+title: "Class7"
+author: "Laura Biggs"
+format: pdf
+---
+
+## K means clustering
+
+Test how this method works with made up data
+```{r}
+a <- rnorm(10000)
+hist(a)
+```
+
+Make some numbers centered on -3
+```{r}
+temp <- c(rnorm(30, -3), rnorm(30, 3))
+
+b <- cbind(x=temp, y=rev(temp))
+plot(b)
+```
+
+K means
+```{r}
+km <- kmeans(b, centers = 2, nstart = 20)
+km
+
+#How many points are in each cluster?
+km$size
+
+#Cluster assignment?
+km$cluster
+
+#Cluster center?
+km$centers
+
+#Plot of b colored by results
+plot(b, col = km$cluster)
+points(km$centers, col ='blue', pch=15, cex =2)
+```
+
+#Heirarchical clustering
+
+The 'hclust()' function requires an input distance matrix
+```{r}
+# Use hclust()
+hc <- hclust(dist(b))
+hc
+
+plot(hc)
+```
+
+Cut the tree to yield separate branches with each leave being a cluster. Use the 'cutree()' function
+```{r}
+#cutree with height
+cutree(hc, h=8)
+
+#cutree with k=2
+grps <- cutree(hc, k=2)
+
+#plot of data colored by groups
+plot(b, col=grps)
+```
+
+
+## Q1
+
+Import UK foods data
+```{r}
+url <- "https://tinyurl.com/UK-foods"
+x <- read.csv(url)
+x
+
+#What are the dimensions of the data?
+dim(x)
+
+#Preview the data
+#View(x)
+head(x)
+```
+
+> Q1: How many rows and columns are in your new data frame named x? What R functions could you use to answer this questions?
+
+17 rows, 5 columns
+dim(x)
+
+Fix the # of columns in the data
+```{r}
+#Assign the row names to the first column w/rownames
+#Remove the X column with [,-1]; be careful as x[,-1] deletes columns for every repeat line run
+rownames(x) <- x[,1]
+x <- x[,-1]
+head(x)
+dim(x)
+```
+
+Preferred approach to assigning row names
+```{r}
+#Automatically assigns the first column as the row names
+#x <- read.csv(url, row.names=1)
+#head(x)
+```
+
+> Q2: Which approach to solving the ‘row-names problem’ mentioned above do you prefer and why? Is one approach more robust than another under certain circumstances?
+
+Piping in the row.names = 1 when the initial data is loaded in is preferable as the minus indexing removes columns for every subsequent run and is therefore more prone to human error.
+
+Visualizing the data
+```{r}
+#As a bar plot with each row represented by a color
+barplot(as.matrix(x), beside=T, col=rainbow(nrow(x)))
+
+#Stacked bar plots
+barplot(as.matrix(x), beside=F, col=rainbow(nrow(x)))
+
+#Pairwise plot
+pairs(x, col=rainbow(10), pch=16)
+```
+
+> Q3:Changing what optional argument in the above barplot() function results in the following plot?
+
+Changing the beside argument to false creates stacked bar plots.
+barplot(as.matrix(x), beside=F, col=rainbow(nrow(x)))
+
+> Q4: Missing
+
+> Q5: Generating all pairwise plots may help somewhat. Can you make sense of the following code and resulting figure? What does it mean if a given point lies on the diagonal for a given plot?
+
+Pairwise plots were difficult to interpret. It would be easier to interpret with fewer variables. Points that lie on the diagonal with the 2 countries being compared represent similarity between the two values. The more linear the correlation looks, the more similar the variable are between the 2 countries.
+
+> Q6: What is the main differences between N. Ireland and the other countries of the UK in terms of this data-set?
+
+The main differences are the heightened consumption of fresh potatoes in Northern Ireland and the reduced consumption of fresh fruit relative to the other contries in the UK.
+
+Base R PCA plots
+```{r}
+#Must first transpose data as prcomp takes observations as rows and variables as columns
+pca <- prcomp(t(x))
+summary(pca)
+
+#PC1 vs PC2; PC1 is first col, PC2 2nd col; index with transposed pca information
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+text(pca$x[,1], pca$x[,2], colnames(x))
+
+#Add color to the text
+text(pca$x[,1], pca$x[,2], colnames(x), col = c("orange", "red", "blue", "green"))
+```
+
+> Q7:  Complete the code below to generate a plot of PC1 vs PC2. The second line adds text labels over the data points.
+
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+text(pca$x[,1], pca$x[,2], colnames(x))
+
+> Q8: Customize your plot so that the colors of the country names match the colors in our UK and Ireland map and table at start of this document.
+
+text(pca$x[,1], pca$x[,2], colnames(x), col = c("orange", "red", "blue", "green"))
+
+
+Principal component variation
+```{r}
+#How much variation each PC accounts for with sdev
+v <- round(pca$sdev^2/sum(pca$sdev^2) * 100)
+v
+
+#Simplified version
+z <- summary(pca)
+z$importance
+```
+
+Barplot of variances
+```{r}
+barplot(v, xlab="Principal Component", ylab="Percent Variation")
+```
+
+Variable loadings; positive loading score
+```{r}
+#PC1
+par(mar=c(10, 3, 0.35, 0))
+barplot(pca$rotation[,1], las=2)
+
+#PC2
+par(mar=c(10, 3, 0.35, 0))
+barplot(pca$rotation[,2], las=2)
+```
+
+>Q9: Generate a similar ‘loadings plot’ for PC2. What two food groups feature prominantely and what does PC2 maninly tell us about?
+
+PC2 features fresh potatoes and soft drinks which contribute to the most to the vertical component of the variation across the 17 dimensions of 4 countries.
+par(mar=c(10, 3, 0.35, 0))
+barplot(pca$rotation[,2], las=2)
+
+Biplots
+```{r}
+biplot(pca)
+```
+
+## Q2
+
+Read in RNA Seq data
+```{r}
+url2 <- "https://tinyurl.com/expression-CSV"
+rna.data <- read.csv(url2, row.names=1)
+head(rna.data)
+
+dim(rna.data)
+```
+
+> Q10: How many genes and samples are in this data set?
+
+100 genes and 10 samples of differing conditions.
+dim(rna.data)
+
+RNA seq PCA
+```{r}
+#Transpose rna.data
+pca <- prcomp(t(rna.data), scale = TRUE)
+
+# PCA plot
+plot(pca$x[,1], pca$x[,2], xlab='PC1', ylab='PC2')
+
+summary(pca)
+
+#Scree plot
+plot(pca, main="Quick Scree plot")
+```
+
+PCA variance x/prcomp
+```{r}
+#Variance
+pca.var <- pca$sdev^2
+
+#Percent variation
+pca.var.per <- round(pca.var/sum(pca.var)*100, 1)
+pca.var.per
+```
+
+Scree plot
+```{r}
+barplot(pca.var.per, main = "Scree Plot",
+        names.arg = paste0("PC", 1:10),
+        xlab="Principal Component", ylab="Percent Variation")
+```
+
+Improved PCA plot w/WT and KO titles
+```{r}
+colvec <- colnames(rna.data)
+colvec[grep("wt", colvec)] <- "red"
+colvec[grep("ko", colvec)] <- "blue"
+
+#?grep
+
+plot(pca$x[,1], pca$x[,2], col=colvec, pch=16,
+     xlab=paste0("PC1 (", pca.var.per[1], "%)"),
+     ylab=paste0("PC2 (", pca.var.per[2], "%)"))
+
+text(pca$x[,1], pca$x[,2], labels = colnames(rna.data), pos=c(rep(4,5), rep(2,5)))
+```
+
+ggplot PCA
+```{r}
+#Load in package
+library(ggplot2)
+
+# Our pca
+#pca$x
+
+#ggplot requires data.frame input; convert pca variable to df
+df <- as.data.frame(pca$x)
+
+#Plot PCA w/ggplot
+ggplot(df) + 
+  aes(PC1, PC2) +
+  geom_point()
+```
+
+Adding more variables to ggplot PCA
+```{r}
+#Inspect rna.data
+head(rna.data)
+
+#If we want to add WT and KO conditions we need to modify the df
+#Adds sample name
+df$samples <- colnames(rna.data)
+
+#Adds WT/KO component
+df$condition <- substr(colnames(rna.data),1,2)
+```
+
+Finalized ggplot
+```{r}
+p <- ggplot(df) +
+      aes(PC1, PC2, label=samples, col=condition) +
+      geom_label(show.legend = FALSE)
+p
+
+p + labs(title = "PCA of RNA Seq Data",
+         subtitle = "PC1 clearly separates WT from KO samples",
+         x=paste0("PC1 (", pca.var.per[1], "%)"),
+         y=paste0("PC2 (", pca.var.per[2], "%)"),
+         caption = "Class example data") +
+         theme_bw()
+```
+
+## Q3 Optional: Top 10 PC1 genes
+```{r}
+#pca$rotation = the relative expression
+loading_scores <- pca$rotation[,1]
+
+#Top gene scores of PC1
+#Takes the absolute value of pca$rotation
+gene_scores <- abs(loading_scores)
+head(gene_scores)
+
+#Sorts gene ranks by greatest to smallest expression
+gene_scores_ranked <- sort(gene_scores, decreasing = TRUE)
+head(gene_scores_ranked)
+
+#Top 10 genes by NAME
+top_10_genes <- names(gene_scores_ranked[1:10])
+top_10_genes
+```
+
+## Answers to lab questions
+> Q1: How many rows and columns are in your new data frame named x? What R functions could you use to answer this questions?
+
+17 rows, 5 columns
+dim(x)
+
+> Q2: Which approach to solving the ‘row-names problem’ mentioned above do you prefer and why? Is one approach more robust than another under certain circumstances?
+
+Piping in the row.names = 1 when the initial data is loaded in is preferable as the minus indexing removes columns for every subsequent run and is therefore more prone to human error.
+
+> Q3:Changing what optional argument in the above barplot() function results in the following plot?
+
+Changing the beside argument to false creates stacked bar plots.
+barplot(as.matrix(x), beside=F, col=rainbow(nrow(x)))
+
+> Q4: Missing
+
+> Q5: Generating all pairwise plots may help somewhat. Can you make sense of the following code and resulting figure? What does it mean if a given point lies on the diagonal for a given plot?
+
+Pairwise plots were difficult to interpret. It would be easier to interpret with fewer variables. Points that lie on the diagonal with the 2 countries being compared represent similarity between the two values. The more linear the correlation looks, the more similar the variable are between the 2 countries.
+
+> Q6: What is the main differences between N. Ireland and the other countries of the UK in terms of this data-set?
+
+The main differences are the heightened consumption of fresh potatoes in Northern Ireland and the reduced consumption of fresh fruit relative to the other contries in the UK.
+
+> Q7:  Complete the code below to generate a plot of PC1 vs PC2. The second line adds text labels over the data points.
+
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+text(pca$x[,1], pca$x[,2], colnames(x))
+
+> Q8: Customize your plot so that the colors of the country names match the colors in our UK and Ireland map and table at start of this document.
+
+text(pca$x[,1], pca$x[,2], colnames(x), col = c("orange", "red", "blue", "green"))
+
+>Q9: Generate a similar ‘loadings plot’ for PC2. What two food groups feature prominantely and what does PC2 maninly tell us about?
+
+PC2 features fresh potatoes and soft drinks which contribute to the most to the vertical component of the variation across the 17 dimensions of 4 countries.
+par(mar=c(10, 3, 0.35, 0))
+barplot(pca$rotation[,2], las=2)
+
+> Q10: How many genes and samples are in this data set?
+
+100 genes and 10 samples of differing conditions.
+dim(rna.data)
