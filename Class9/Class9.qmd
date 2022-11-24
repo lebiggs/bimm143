@@ -1,0 +1,207 @@
+---
+title: "Class9"
+author: "Laura Biggs"
+format: pdf
+---
+
+## Q1: What percentage of structures in the PDB are solved by X-Ray and Electron Microscopy?
+
+86.2% of the structures in the PDB are solved by X-ray crystallography while only 6.5% of the structures are visualized by EM.
+
+```{r}
+#Read in PDB data
+PDB <- read.csv("Data Export Summary.csv", row.names = 1)
+print(sapply(PDB, class))
+
+#Must convert character columns into numeric
+PDB$X.ray <- as.numeric(gsub(",","",PDB$X.ray))
+PDB$X.ray
+Xray_sum <- sum(PDB$X.ray)
+
+PDB$EM <- as.numeric(gsub(",","",PDB$EM))
+PDB$EM
+EM_sum <- sum(PDB$EM)
+
+PDB$Total <- as.numeric(gsub(",","",PDB$Total))
+PDB$Total
+Total_sum <- sum(PDB$Total)
+
+print(sapply(PDB, class))
+
+#% Xray
+Total_Xray <- (Xray_sum/Total_sum) * 100
+print(Total_Xray)
+
+#% EM
+Total_EM <- (EM_sum/Total_sum) * 100
+print(Total_EM)
+```
+
+## Q2: What proportion of structures in the PDB are protein?
+Most of the structures in the PDB are protein at a proportion of .87, or 87%.
+
+```{r}
+#Convert character NMR to numeric
+PDB$NMR <- as.numeric(gsub(",","",PDB$NMR))
+PDB$NMR
+print(sapply(PDB, class))
+
+
+NMR_protein <- PDB["Protein (only)", "Total"]
+NMR_protein
+
+#Proportion
+NMR_protein_proportion <- NMR_protein/Total_sum
+NMR_protein_proportion
+```
+
+## Q3: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+There are 43,831 HIV-1 protease structures in the PDB.
+
+## HIV-Pr
+
+## Q4: Water molecules normally have 3 atoms. Why do we see just one atom per water molecule in this structure? 
+Hydrogen is too small (1.9 angstroms) to be captured by the resolution of this X ray crystallography (2 angstroms). Only the oxygens can be visualized as they are large enough.
+
+## Q5: There is a critical "conserved" water molecule in the binding site. Can you identify this water molecule? What residue number does this water molecule have? 
+Water molecule 308 is conserved at the binding site.
+
+## Q6: Generate and save a figure clearly showing the two distinct chains of HIV-protease along with the ligand. You might also consider showing the catalytic residues ASP 25 in each chain (we recommend "Ball & Stick" for these side-chains). Add this figure to your Quarto document. 
+![](images/1HSG%20(1).png)
+
+
+## Bio3D
+
+```{r}
+# Load in Bio3D
+library(bio3d)
+
+# Read in PDB file
+pdb <- read.pdb("1hsg")
+pdb
+```
+
+## Q7: How many amino acid residues are there in this pdb object? 
+There are 198 amino acid residues.
+
+## Q8: Name one of the two non-protein residues? 
+The non-protein residues are the water molecules and MK1, the protease inhibitor drug.
+
+## Q9: How many protein chains are in this structure?
+There are 2 protein chains, chain A and B of the HIV protease.
+
+Inspect pdb further
+```{r}
+attributes(pdb)
+head(pdb$atom)
+```
+
+Package Setup
+```{r}
+#install.packages("ggrepel")
+#install.packages("devtools")
+#install.packages("BiocManager)
+
+#BiocManager::install("msa")
+#devtools::install_bitbucket("Grantlab/bio3d-view")
+```
+
+## Q10. Which of the packages above is found only on BioConductor and not CRAN? 
+MSA is a package only available on BioConductor.
+
+## Q11. Which of the above packages is not found on BioConductor or CRAN?: 
+bio3d-view is not found on BioConductor or CRAN.
+
+## Q12. True or False? Functions from the devtools package can be used to install packages from GitHub and BitBucket?
+True
+
+Search & retrieve ADK structures
+```{r}
+library(bio3d)
+aa <- get.seq("1ake_A")
+aa
+```
+
+## Q13. How many amino acids are in this sequence, i.e. how long is this sequence? 
+There are 214 amino acids in the sequence
+
+Blast query
+```{r}
+b <- blast.pdb(aa)
+
+#hits <- NULL
+#hits$pdb.id <- c('1AKE_A','6S36_A','6RZE_A','3HPR_A','1E4V_A','5EJE_A','1E4Y_A','3X2S_A','6HAP_A','6HAM_A','4K46_A','3GMT_A','4PZL_A')
+
+#Summary of search results
+hits <- plot(b)
+
+#'Top hits'
+head(hits$pdb.id)
+```
+
+Download hits as pdb files
+```{r}
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+```
+
+Align and superimpose structure data
+```{r}
+# Align related PDBs
+pdbs <- pdbaln(files, fit = TRUE, exefile="msa")
+
+#Vectorize PDB codes for figure axis
+ids <- basename.pdb(pdbs$id)
+
+#Draw schematic alignment
+plot(pdbs, labels=ids)
+```
+
+Annotate PDB structures
+```{r}
+anno <- pdb.annotate(ids)
+unique(anno$source)
+```
+
+## PCA
+```{r}
+# Perform PCA
+pc.xray <- pca(pdbs)
+plot(pc.xray)
+```
+
+Pairwise RMSD
+```{r}
+rd <- rmsd(pdbs)
+
+#Hierarchical clustering
+hc.rd <- hclust(dist(rd))
+grps.rd <- cutree(hc.rd, k=3)
+
+plot(pc.xray, 1:2, col="grey50", bg=grps.rd, pch=21, cex=1)
+```
+
+Alternative ggplot
+```{r}
+library(ggplot2)
+library(ggrepel)
+
+df <- data.frame(PC1=pc.xray$z[,1], 
+                 PC2=pc.xray$z[,2], 
+                 col=as.factor(grps.rd),
+                 ids=ids)
+
+p <- ggplot(df) + 
+  aes(PC1, PC2, col=col, label=ids) +
+  geom_point(size=2) +
+  geom_text_repel(max.overlaps = 20) +
+  theme(legend.position = "none")
+p
+```
+Normal mode analysis
+```{r}
+modes <- nma(pdbs)
+plot(modes, pdbs, col=grps.rd)
+```
+
+## Q14: What do you note about this plot? Are the black and colored lines similar or different? Where do you think they differ most and why?
+The black and colored lines differ in the degree of fluctuation, where colored lines are generally more dynamic. These lines differ most at the functional regions of the protein, ie: where the conformations change. 
