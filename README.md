@@ -12,4 +12,6 @@ My portfolio of work for [BIMM143](https://bioboot.github.io/bimm143_F22/).
 - Class 10: [Halloween Candy Mini-Project](https://github.com/lebiggs/bimm143/blob/main/Halloween%20Mini%20Project/HalloweenProject.md) | [code](https://github.com/lebiggs/bimm143/tree/main/Halloween%20Mini%20Project)
 - Class 11: [Genome informatics and high throughput seq](https://github.com/lebiggs/bimm143/blob/main/Class11/Class11HW.pdf) | [code](https://github.com/lebiggs/bimm143/blob/main/Class11/Class11HW.Rmd)
 - Class 12: [Transcriptomics and RNA-seq](https://github.com/lebiggs/bimm143/blob/main/Class12%20RNA%20Seq/RNAseq.pdf) | [code](https://github.com/lebiggs/bimm143/blob/main/Class12%20RNA%20Seq/RNAseq.Rmd)
-- Class 13: [RNA-seq mini project]()
+- Class 13: [RNA-seq mini project](https://github.com/lebiggs/bimm143/blob/main/Class13.pdf) | [code](https://github.com/lebiggs/bimm143/blob/main/Class13.Rmd)
+- Class 17: [Vaccination rate mini-project](https://github.com/lebiggs/bimm143/blob/main/COVID_Mini_Proj/COVID_Vax_Analysis.pdf) | [code](https://github.com/lebiggs/bimm143/blob/main/COVID_Mini_Proj/COVID_Vax_Analysis.qmd)
+- Class 19: [Pertussis mini-project](https://github.com/lebiggs/bimm143/blob/main/Pertussis%20Mini%20Project/Pertussis_Proj.pdf) | [code](https://github.com/lebiggs/bimm143/blob/main/Pertussis%20Mini%20Project/Pertussis_Proj.qmd)
